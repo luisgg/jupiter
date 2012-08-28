@@ -1,0 +1,192 @@
+#!/bin/bash
+#
+# $VGA_DEVICE toggle
+# Andrew Wyatt
+# Tool to enable / disable $VGA_DEVICE output
+JUPITER_PATH="/usr/lib/jupiter/scripts"
+JUPITER_VAR="/var/jupiter"
+
+getXuser() {
+        local display userhome uid
+        if [ -z "$displaynum" ]; then
+                display=.+
+        else
+                display=":$displaynum"
+        fi
+        uid=$(ck-list-sessions | awk 'BEGIN { unix_user = ""; } /^Session/ { unix_user = ""; } /unix-user =/ { gsub(/'\''/,"",$3); unix_user = $3; } /x11-display = '\'$display\''/ { print unix_user; exit (0); }')
+
+        if [ -n "$uid" ]; then
+                user=$(getent passwd $uid | cut -d: -f1)
+                userhome=$(getent passwd $user | cut -d: -f6)
+                export XAUTHORITY=$userhome/.Xauthority
+        else
+                user=
+                export XAUTHORITY=""
+        fi
+}
+
+
+if [[ "$*" =~ "silent" ]]; then
+  NO_NOTIFY=1
+fi
+
+. $JUPITER_PATH/notify
+
+NICON="/usr/share/pixmaps/display.png"
+
+if [ ! -d "$JUPITER_VAR" ]; then
+  mkdir $JUPITER_VAR 2>/dev/null
+fi
+
+if [ -e "$JUPITER_VAR/vga_saved" ]; then
+  VGA_RESTORE=$(cat $JUPITER_VAR/vga_saved)
+fi
+
+if [ x"$DISPLAY" = x"" ]; then
+  for x in /tmp/.X11-unix/*; do 
+    displaynum=$(echo $x | sed s#/tmp/.X11-unix/X##)
+    getXuser
+    if [ x"$XAUTHORITY" != x"" ]; then
+      export DISPLAY=":$displaynum"
+    fi
+  done
+fi
+
+LVDS_DEVICE=$(xrandr | grep " connected" | awk '{print $1}' | grep -e "^LVDS\|^eDP")
+VGA_DEVICE=$(xrandr | grep " connected" | awk '{print $1}' | grep -e "^VGA\|^DVI\|^DP")
+VGA_XRANDR=$(xrandr)
+VGA_STATUS=$(echo "$VGA_XRANDR" | grep 'VGA.*\|DVI.*\|DP.* connected' >/dev/null 2>&1 && echo connected)
+VGA_ENABLED=$(echo "$VGA_XRANDR" | grep 'VGA.*\|DVI.*\|DP.* connected' -A 1 | grep "\*" >/dev/null 2>&1 && echo 1)
+
+function video_toggle {
+  if [ "$VGA_RESTORE" = "lvds" ]; then
+    vga
+  elif [ "$VGA_RESTORE" = "vga" ]; then
+    clone
+  else
+    lvds
+  fi
+}
+
+function mon {
+  echo -n $LVDS_DEVICE > $JUPITER_VAR/displays
+  if [ "$VGA_STATUS" == "connected" ]; then
+      if [ -s $JUPITER_VAR/displays ]; then 
+	 echo -n " " >> $JUPITER_VAR/displays
+      fi
+      echo -n $VGA_DEVICE >> $JUPITER_VAR/displays
+  fi
+  exit 0 
+}
+
+function vga {
+  if [ ! "$VGA_STATUS" = "connected" ]; then
+      notify $"External monitor not detected." $NICON
+      exit 0
+  fi
+  xrandr --output $VGA_DEVICE --auto
+  if [ "$?" = "0" ]; then
+    xrandr --output $LVDS_DEVICE --off
+    notify $"External Display Mode" $NICON
+    echo vga > $JUPITER_VAR/vga_saved
+    $JUPITER_PATH/resolutions modes $VGA_DEVICE
+  else
+    notify $"Could not enable monitor." $NICON
+  fi
+  exit 0
+}
+
+function clone {
+  if [ ! "$VGA_STATUS" = "connected" ]; then
+      notify $"External monitor not detected." $NICON
+      exit 0
+  fi
+  xrandr --output $VGA_DEVICE --auto --same-as $LVDS_DEVICE  
+  if [ "$?" = "0" ]; then
+    xrandr --output $LVDS_DEVICE --auto
+    notify $"Clone Display Mode" $NICON
+    echo clone > $JUPITER_VAR/vga_saved
+    $JUPITER_PATH/resolutions modes $VGA_DEVICE
+    $JUPITER_PATH/resolutions modes $LVDS_DEVICE
+  else
+    notify $"Could not enable monitor." $NICON
+  fi
+  exit 0
+}
+
+function il {
+  if [ ! "$VGA_STATUS" = "connected" ]; then
+      notify $"External monitor not detected." $NICON
+      exit 0
+  fi
+  xrandr --output $VGA_DEVICE --auto --right-of $LVDS_DEVICE --primary
+  if [ "$?" = "0" ]; then
+    xrandr --output $LVDS_DEVICE --auto
+    notify $"Internal Display Left" $NICON
+    echo il > $JUPITER_VAR/vga_saved
+    $JUPITER_PATH/resolutions modes $VGA_DEVICE
+    $JUPITER_PATH/resolutions modes $LVDS_DEVICE
+  else
+    notify $"Could not enable monitor." $NICON
+  fi
+  exit 0
+}
+
+function ir {
+  if [ ! "$VGA_STATUS" = "connected" ]; then
+      notify $"External monitor not detected." $NICON
+      exit 0
+  fi
+  xrandr --output $LVDS_DEVICE --auto --right-of $VGA_DEVICE --primary
+  if [ "$?" = "0" ]; then
+    xrandr --output $LVDS_DEVICE --auto
+    notify $"Internal Display right" $NICON
+    echo ir > $JUPITER_VAR/vga_saved
+    $JUPITER_PATH/resolutions modes $VGA_DEVICE
+    $JUPITER_PATH/resolutions modes $LVDS_DEVICE
+  else
+    notify $"Could not enable monitor." $NICON
+  fi
+  exit 0
+}
+
+function lvds {
+  xrandr --output $LVDS_DEVICE --auto
+  if [ "$?" = "0" ]; then
+    xrandr --output $VGA_DEVICE --off
+    notify $"Internal Display Mode" $NICON
+    echo lvds > $JUPITER_VAR/vga_saved
+    $JUPITER_PATH/resolutions modes $LVDS_DEVICE
+  else
+    notify "Could not enable monitor." $NICON
+  fi
+  exit 0 
+}
+
+case $1 in
+  restore)
+    NO_NOTIFY=1
+    $VGA_RESTORE
+  ;;
+  clone)
+    clone
+  ;;
+  il)
+    il
+  ;;
+  ir)
+    ir
+  ;;
+  vga)
+    vga
+  ;;
+  lvds)
+    lvds
+  ;;
+  mon)
+    mon
+  ;;
+  *)
+    video_toggle
+  ;;
+esac

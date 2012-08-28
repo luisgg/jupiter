@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+### BEGIN INIT INFO
+# Provides:          jupiter-healthcheck
+# Default-Start:     2 3 4 5
+# Default-Stop:      1 6
+# Required-Start:
+# Required-Stop:
+# Short-Description: Auto corrects simple issues with Jupiter configuration
+### END INIT INFO
+
+# set -e
+. /lib/lsb/init-functions
+
+case "$1" in
+*)
+  ### Correct problems with sudoers ordering
+  SLAST=$((/usr/bin/tail -n 1 /etc/sudoers | /bin/grep jupiter) && echo OK)
+  if [ "$SLAST" = "" ]; then
+    echo "Jupiter: Autocorrecting issue with sudoers"
+    /bin/sed -i /^%jupit.*\$/d /etc/sudoers
+    echo "%jupiter ALL=NOPASSWD: /usr/lib/jupiter/scripts/bluetooth, /usr/lib/jupiter/scripts/camera, /usr/lib/jupiter/scripts/cpu-control, /usr/lib/jupiter/scripts/resolutions, /usr/lib/jupiter/scripts/rotate, /usr/lib/jupiter/scripts/touchpad, /usr/lib/jupiter/scripts/vga-out, /usr/lib/jupiter/scripts/wifi" >> /etc/sudoers
+  fi
+;;
+esac
+
+exit 0

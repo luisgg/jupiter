@@ -1,0 +1,13 @@
+jupiter (0.1.4-1~webupd8-1) precise; urgency=medium
+ 
+  * new upstream release
+ 
+ -- Alin Andrei <webupd8@gmail.com>  Tue, 13 Mar 2012 01:02:38 +0100
+
+jupiter (0.1.2-1~webupd8-1) precise; urgency=medium
+ 
+  * jupiter now uses python instead of mono
+  * fix touchpad enable/disable for GlidePoint
+  * other fixes
+ 
+ -- Alin Andrei <webupd8@gmail.com>  Tue, 13 Mar 2012 01:02:38 +0100

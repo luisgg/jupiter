@@ -1,0 +1,32 @@
+Source: jupiter
+Section: gnome
+Priority: extra
+Maintainer: Alin Andrei <webupd8@gmail.com>
+Build-Depends: debhelper (>= 7) 
+Standards-Version: 3.7.3
+Homepage: http://www.statux.org
+
+Package: jupiter
+Architecture: all
+Replaces: pyjupiter
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-appindicator, python-gtk2, libnotify-bin, xinput, rfkill, python-appindicator, acpi-support
+Suggests: jupiter-support-eee
+Description: Jupiter Notification Icon / AppIndicator
+ Jupiter is a light weight power and hardware control applet for Linux. 
+ The applet uses Python and comes with an Ubuntu AppIndicator. 
+ .
+ Jupiter is designed to improve battery life of a portable Linux computer by 
+ integrating with the operating system and changing parameters of the 
+ computer based on battery or powered connection.
+ .
+ Additionally, Jupiter provides quick access to some of the commonly 
+ needed hardware controls like screen output and resolution, WIFI, and bluetooth.
+ .
+ If you use Linux on a portable computer, let Jupiter take the effort
+ out of going mobile.
+
+Package: pyjupiter
+Architecture: all
+Depends: jupiter
+Description: Jupiter meta package
+ Jupiter transitional package.

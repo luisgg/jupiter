@@ -1,0 +1,24 @@
+diff -uNr jupiter-0.1.4-1~webupd8/usr/lib/jupiter/scripts/notify jupiter-0.1.4-1~webupd8.patched/usr/lib/jupiter/scripts/notify
+--- jupiter-0.1.4-1~webupd8/usr/lib/jupiter/scripts/notify	2012-08-08 13:01:53.000000000 +0200
++++ jupiter-0.1.4-1~webupd8.patched/usr/lib/jupiter/scripts/notify	2012-08-28 12:39:46.877351191 +0200
+@@ -4,17 +4,17 @@
+     ICON=$2
+     MESSAGE=$1
+     if [ "$DISTRIB_RELEASE" = "9.10" ]; then
+-      DISPLAY=:0.0 notify-send -i $ICON -t 1500 "$MESSAGE" 2>/dev/null
++      DISPLAY=:0.0 notify-send -i $ICON --hint=int:transient:1 "$MESSAGE" 2>/dev/null
+     else
+       USER=$(who | sed -n '/ (:0[\.0]*)$\| :0 /{s/ .*//p;q}')
+       USERCNT=$(who | wc -l)
+       if [ ! "$(whoami)" = "$USER" ]; then
+         if [ ! "$USERCNT" -lt 1 ]; then
+-          su $USER -l -c "DISPLAY=:0.0 notify-send -i $ICON -t 700 \"$MESSAGE\" 2>/dev/null"
++          su $USER -l -c "DISPLAY=:0.0 notify-send -i $ICON --hint=int:transient:1 \"$MESSAGE\" 2>/dev/null"
+         fi
+       else
+         if [ ! "$USERCNT" -lt 1 ]; then
+-          notify-send -i $ICON -t 700 "$MESSAGE" 2>/dev/null
++          notify-send -i $ICON --hint=int:transient:1 "$MESSAGE" 2>/dev/null
+         fi
+       fi
+     fi

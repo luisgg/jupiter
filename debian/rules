@@ -33,7 +33,7 @@ clean:
 	# Add here commands to clean up after the build process.
 	#$(MAKE) clean
 
-	#dh_clean 
+	dh_clean 
 
 install: build
 	#dh_testdir
@@ -63,6 +63,7 @@ binary-indep: build install
 	cp -rf usr/lib $(CURDIR)/debian/jupiter/usr
 	cp -rf pm $(CURDIR)/debian/jupiter/etc
 	cp -rf init $(CURDIR)/debian/jupiter/etc
+	for f in bolt1.png bolt2.png bolt3.png bolt4.png ;do cp $(CURDIR)/debian/jupiter/usr/share/pixmaps/jupiter/$$f $(CURDIR)/debian/jupiter/usr/share/pixmaps/; done
 
 # We have nothing to do by default.
 

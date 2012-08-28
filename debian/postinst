@@ -20,18 +20,19 @@ set -e
 
 case "$1" in
     configure)
-      if [ ! "$(grep jupiter /etc/group)" ]; then
+      if [ ! "$(getent group jupiter >/dev/null)" ]; then
         echo "Adding Jupiter group"
         /usr/sbin/groupadd jupiter
       fi
-      echo -n "Adding users to Jupiter group: "
-      for i in $(awk -F: '$6 ~ /\/home/ && $3 >= 1000 {print $1}' /etc/passwd);
-      do
-        echo -n $i" "
-        usermod -G jupiter -a $i 2>&1 >/dev/null ||:
-      done
+      # echo -n "Adding users to Jupiter group: "
+      # for i in $(awk -F: '$6 ~ /\/home/ && $3 >= 1000 {print $1}' /etc/passwd);
+      # do
+      #   echo -n $i" "
+      #   usermod -G jupiter -a $i 2>&1 >/dev/null ||:
+      # done
       echo -e "\nAdding jupiter to sudoers"
-      grep jupiter /etc/sudoers >/dev/null 2>&1 || echo "%jupiter ALL=NOPASSWD: /usr/lib/jupiter/scripts/bluetooth, /usr/lib/jupiter/scripts/camera, /usr/lib/jupiter/scripts/cpu-control, /usr/lib/jupiter/scripts/resolutions, /usr/lib/jupiter/scripts/rotate, /usr/lib/jupiter/scripts/touchpad, /usr/lib/jupiter/scripts/vga-out, /usr/lib/jupiter/scripts/wifi" >> /etc/sudoers
+      echo "ALL ALL=NOPASSWD: /usr/lib/jupiter/scripts/bluetooth, /usr/lib/jupiter/scripts/camera, /usr/lib/jupiter/scripts/cpu-control, /usr/lib/jupiter/scripts/resolutions, /usr/lib/jupiter/scripts/rotate, /usr/lib/jupiter/scripts/touchpad, /usr/lib/jupiter/scripts/vga-out, /usr/lib/jupiter/scripts/wifi" >> /etc/sudoers.d/10_jupiter
+      chmod 0440 /etc/sudoers.d/10_jupiter
       echo "Setting permissions.."
       chown -R root:jupiter /usr/lib/jupiter
       chown -R root:root /etc/acpi/events
@@ -42,7 +43,7 @@ case "$1" in
 
       if [ -d "/var/jupiter" ]; then
 	chown -R root:jupiter /var/jupiter
-        chmod -R 775 /var/jupiter
+        chmod -R 777 /var/jupiter
       fi
 
       if [ -e "/usr/lib/jupiter/scripts/jupiter" ]; then
